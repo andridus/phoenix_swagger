@@ -134,7 +134,7 @@ defmodule Mix.Tasks.PhoenixSwagger.Generate do
     base_module =
       app_name()
       |> Application.get_env(:swagger, [])
-      |> Keyword.get(swgger_env, :base_module)
+      |> Keyword.get(:base_module)
     router.__routes__()
     |> Enum.map(&find_swagger_path_function/1)
     |> Enum.filter(&String.starts_with?("#{&1[:controller]}", "Elixir.#{base_module}"))

@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.PhoenixSwagger.Generate do
+defmodule Mix.Tasks.Phx.Swagger.Generate do
   use Mix.Task
   require Logger
 

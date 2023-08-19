@@ -6,7 +6,7 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
 
   Generate a swagger file and place it in your applications `priv/static` dir:
 
-      mix phoenix.swagger.generate priv/static/myapp.json
+      mix phx.swagger.generate priv/static/myapp.json
 
   Add a swagger scope to your router, and forward all requests to SwaggerUI
 

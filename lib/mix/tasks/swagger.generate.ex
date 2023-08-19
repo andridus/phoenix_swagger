@@ -25,7 +25,7 @@ defmodule Mix.Tasks.PhoenixSwagger.Generate do
 
   def run(_args) do
     Mix.Task.run("compile")
-    Mix.Task.reenable("swagger.generate")
+    Mix.Task.reenable("phx.swagger.generate")
     Code.append_path(Mix.Project.compile_path())
 
     swagger_files =

@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Compile.PhoenixSwagger do
   """
 
   def run(_args) do
-    case Mix.Task.run("swagger.generate") do
+    case Mix.Task.run("phx.swagger.generate") do
       results when is_list(results) ->
         errors = filter_errors(results)
         if Enum.empty?(errors), do: :ok, else: :error

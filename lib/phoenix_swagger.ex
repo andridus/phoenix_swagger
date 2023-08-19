@@ -39,6 +39,8 @@ defmodule PhoenixSwagger do
 
   @table :validator_table
 
+  defp app_name, do: Mix.Project.get!().project()[:app]
+
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
@@ -249,7 +251,7 @@ defmodule PhoenixSwagger do
   Use JSON library from phoenix configuration
   """
   def json_library do
-    Application.get_env(:softaliza_store, :swagger_json_library, Poison)
+    Application.get_env(app_name(), :swagger_json_library, Poison)
   end
 
   @doc false

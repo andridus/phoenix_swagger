@@ -174,8 +174,6 @@ defmodule Mix.Tasks.PhoenixSwagger.Generate do
 
             quote do
               import PhoenixSwagger.Path
-              alias SoftalizaStore.Core
-              alias SoftalizaStoreWeb.Response
               unquote(body)
             end
             |> Code.eval_quoted()

@@ -22,7 +22,7 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
   alias Plug.Conn
 
   # Serve static assets before routing
-  plug(Plug.Static, at: "/", from: :softaliza_store, gzip: false, only: ~w(swagger))
+  plug(Plug.Static, at: "/", from: :phoenix_swagger)
 
   plug(:match)
   plug(:dispatch)

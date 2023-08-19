@@ -4,7 +4,7 @@ defmodule PhoenixSwagger.Plug.Validate do
 
   Please make sure to:
 
-    * load Swagger specs at appliction start with
+    * load PhoenixSwagger specs at appliction start with
       `PhoenixSwagger.Validator.parse_swagger_schema/1`
     * set `conn.private.phoenix_swagger.valid` to `true` to skip validation
 

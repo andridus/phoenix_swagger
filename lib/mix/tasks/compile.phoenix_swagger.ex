@@ -4,12 +4,11 @@ defmodule Mix.Tasks.Compile.PhoenixSwagger do
   @shortdoc "Compiles swagger annotations to JSON file"
 
   @moduledoc """
-  See documentation for `Mix.Tasks.Phx.Swagger.Generate`
+  See documentation for `Mix.Tasks.Phx.PhoenixSwagger.Generate`
   """
 
   def run(_args) do
-    # TODO: this should intelligently track if the JSON files need to be updated
-    case Mix.Task.run("phx.swagger.generate") do
+    case Mix.Task.run("swagger.generate") do
       results when is_list(results) ->
         errors = filter_errors(results)
         if Enum.empty?(errors), do: :ok, else: :error

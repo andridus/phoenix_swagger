@@ -59,7 +59,7 @@ defmodule PhoenixSwagger.SchemaTest do
     [swagger_schema: schema]
   end
 
-  # Swagger 2.0 and JSON-Schema differ in the treatment of nulls.
+  # PhoenixSwagger 2.0 and JSON-Schema differ in the treatment of nulls.
   # When the "x-nullable" vendor extension is present in the swagger,
   # convert the type to an array including "null"
   defp swagger_nullable_to_json_schema(schema = %{"type" => type, "x-nullable" => true})
@@ -70,7 +70,8 @@ defmodule PhoenixSwagger.SchemaTest do
 
   defp swagger_nullable_to_json_schema(schema = %{"$ref" => ref, "x-nullable" => true})
        when is_binary(ref) do
-    schema = schema
+    schema =
+      schema
       |> Map.drop(["$ref", "x-nullable"])
       |> Map.put("oneOf", [%{"type" => "null"}, %{"$ref" => ref}])
 

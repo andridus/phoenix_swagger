@@ -110,9 +110,7 @@ defmodule PhoenixSwagger.JsonApi do
     %Schema{
       type: :object,
       description:
-        "A JSON-API document with a single [#{resource}](##{
-          resource |> to_string |> String.downcase()
-        }) resource",
+        "A JSON-API document with a single [#{resource}](##{resource |> to_string |> String.downcase()}) resource",
       properties: %{
         links: %Schema{
           type: :object,

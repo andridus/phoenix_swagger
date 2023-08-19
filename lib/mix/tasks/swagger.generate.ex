@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Phx.Swagger.Generate do
+defmodule Mix.Tasks.PhoenixSwagger.Generate do
   use Mix.Task
   require Logger
 
@@ -8,13 +8,9 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
 
   @moduledoc """
   Generates swagger.json file based on phoenix router and controllers.
-
   Usage:
-
       mix phx.swagger.generate
-
-  Swagger file configuration must be defined in the project config, eg:
-
+  PhoenixSwagger file configuration must be defined in the project config, eg:
       config :your_app, :phoenix_swagger,
         swagger_files: %{
           "priv/static/swagger.json" => [router: YourAppWeb.Router, endpoint: YourAppWeb.Endpoint]
@@ -25,22 +21,21 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
   @default_title "<enter your title>"
   @default_version "0.0.1"
 
-  defp app_name(), do: Mix.Project.get!().project()[:app]
+  defp app_name, do: Mix.Project.get!().project()[:app]
 
   def run(_args) do
     Mix.Task.run("compile")
-    Mix.Task.reenable("phx.swagger.generate")
+    Mix.Task.reenable("swagger.generate")
     Code.append_path(Mix.Project.compile_path())
 
     swagger_files =
       app_name()
-      |> Application.get_env(:phoenix_swagger, [])
+      |> Application.get_env(:swagger, [])
       |> Keyword.get(:swagger_files, %{})
 
     if Enum.empty?(swagger_files) && !Mix.Task.recursing?() do
       Logger.warn("""
       No swagger configuration found. Ensure phoenix_swagger is configured, eg:
-
       config #{inspect(app_name())}, :phoenix_swagger,
         swagger_files: %{
           ...
@@ -56,7 +51,7 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
         end
 
       case result do
-        :ok -> :ok
+        :ok -> Logger.info("PhoenixSwagger Updated!")
         {:error, reason} -> Logger.warn("Failed to generate #{output_file}: #{reason}")
       end
     end)
@@ -118,23 +113,94 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
 
   def default_swagger_info do
     %{
-      swagger: "2.0",
+      swagger: "1.0",
+      openapi: "3.0.0",
       info: %{
         title: @default_title,
         version: @default_version
       },
       paths: %{},
-      definitions: %{}
+      definitions: %{},
+      customOptions: %{
+        defaultModelsExpandDepth: -1,
+        tagsSorter: "alpha",
+        operationsSorter: "alpha",
+        docExpansion: "none"
+      }
     }
   end
 
   defp collect_paths(swagger_map, router) do
+    base_module =
+      app_name()
+      |> Application.get_env(:swagger, [])
+      |> Keyword.get(swgger_env, :base_module)
     router.__routes__()
     |> Enum.map(&find_swagger_path_function/1)
-    |> Enum.filter(&(!is_nil(&1)))
-    |> Enum.filter(&controller_function_exported?/1)
-    |> Enum.map(&get_swagger_path/1)
+    |> Enum.filter(&String.starts_with?("#{&1[:controller]}", "Elixir.#{base_module}"))
+    |> then(fn x ->
+      Enum.map(x, fn y ->
+        get_docs(y.controller)
+        |> List.keyfind(y.action, 0)
+        |> parse_doc(y)
+      end)
+    end)
     |> Enum.reduce(swagger_map, &merge_paths/2)
+  end
+
+  defp parse_doc(nil, module) do
+    raise("ERROR: Not found documentation for '#{module.action}' in '#{module.controller}'.")
+  end
+
+  defp parse_doc({fun, doc}, module) do
+    String.splitter(doc, ["---| swagger |---", "---| end |---"])
+    |> Enum.take(3)
+    |> case do
+      [description, sw, _] ->
+        description = String.trim(description)
+
+        ~s(summary \"#{description}\" \n description \"#{description}\" \n #{sw})
+        |> Code.string_to_quoted()
+        |> case do
+          {:ok, {_, _, tail}} ->
+            body =
+              Enum.reduce(
+                tail,
+                Macro.escape(%PhoenixSwagger.Path.PathObject{}),
+                &quote do
+                  unquote(&2) |> unquote(&1)
+                end
+              )
+
+            quote do
+              import PhoenixSwagger.Path
+              alias SoftalizaStore.Core
+              alias SoftalizaStoreWeb.Response
+              unquote(body)
+            end
+            |> Code.eval_quoted()
+            |> then(
+              &(elem(&1, 0)
+                |> PhoenixSwagger.ensure_operation_id(module.controller, fun)
+                |> PhoenixSwagger.ensure_tag(module.controller)
+                |> PhoenixSwagger.ensure_verb_and_path(module)
+                |> PhoenixSwagger.Path.nest()
+                |> PhoenixSwagger.to_json())
+            )
+
+          e ->
+            Logger.error(
+              error: "Check error on '#{module.controller} at '#{fun}' !! NOT EXPORTED",
+              metadata: e
+            )
+        end
+
+      e ->
+        Logger.error(
+          error: "Check error on '#{module.controller} at '#{fun}' !! NOT EXPORTED",
+          metadata: e
+        )
+    end
   end
 
   defp find_swagger_path_function(route = %{opts: action, path: path, verb: verb})
@@ -153,19 +219,39 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
     nil
   end
 
+  defp get_docs(module) do
+    Code.fetch_docs(module)
+    |> case do
+      {_, _, _, _, _, _, arr} ->
+        Enum.map(arr, fn
+          {{_, _function, _}, _, _, :hidden, _} -> :none
+          {{_, _function, _}, _, _, :none, _} -> :none
+          {{_, function, _}, _, _, doc, _} -> {function, doc["en"]}
+        end)
+        |> Enum.filter(&(&1 != :none))
+
+      _ ->
+        []
+    end
+  end
+
   defp generate_swagger_path_function(route, action, path, verb) do
     controller = find_controller(route)
+
     swagger_fun = "swagger_path_#{action}" |> String.to_atom()
 
     loaded? = Code.ensure_compiled(controller)
+
     case loaded? do
       {:module, _} ->
         %{
           controller: controller,
           swagger_fun: swagger_fun,
           path: format_path(path),
+          action: action,
           verb: verb
         }
+
       _ ->
         Logger.warn("Warning: #{controller} module didn't load.")
         nil
@@ -174,14 +260,6 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
 
   defp format_path(path) do
     Regex.replace(~r/:([^\/]+)/, path, "{\\1}")
-  end
-
-  defp controller_function_exported?(%{controller: controller, swagger_fun: fun}) do
-    function_exported?(controller, fun, 1)
-  end
-
-  defp get_swagger_path(route = %{controller: controller, swagger_fun: fun}) do
-    apply(controller, fun, [route])
   end
 
   defp merge_paths(path, swagger_map) do
@@ -205,20 +283,25 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
   end
 
   defp collect_host_from_endpoint(swagger_map, endpoint_config) do
+    swgger_env =
+      app_name()
+      |> Application.get_env(:swagger, [])
+
     load_from_system_env = Keyword.get(endpoint_config, :load_from_system_env, false)
-    url = Keyword.get(endpoint_config, :url)
-    host = Keyword.get(url, :host, "localhost")
-    port = Keyword.get(url, :port, 4000)
+    host = Keyword.get(swgger_env, :host, "localhost")
+    port = Keyword.get(swgger_env, :host, 4000)
+    scheme = Keyword.get(swgger_env, :scheme)
 
     swagger_map =
       if !load_from_system_env and is_binary(host) and (is_integer(port) or is_binary(port)) do
-        Map.put_new(swagger_map, :host, "#{host}:#{port}")
+        port = if port == 80, do: "", else: ":#{port}"
+        Map.put_new(swagger_map, :host, "#{host}#{port}")
       else
         # host / port may be {:system, "ENV_VAR"} tuples or loaded in Endpoint.init callback
         swagger_map
       end
 
-    case endpoint_config[:https] do
+    case scheme do
       nil ->
         swagger_map
 
@@ -232,7 +315,7 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
     |> Enum.map(&find_controller/1)
     |> Enum.uniq()
     |> Enum.filter(&function_exported?(&1, :swagger_definitions, 0))
-    |> Enum.map(&apply(&1, :swagger_definitions, []))
+    |> Enum.map(& &1.swagger_definitions())
     |> Enum.reduce(swagger_map, &merge_definitions/2)
   end
 
@@ -240,7 +323,7 @@ defmodule Mix.Tasks.Phx.Swagger.Generate do
     Module.concat([:"Elixir" | Module.split(route_map.plug)])
   end
 
-  defp merge_definitions(definitions, swagger_map = %{definitions: existing}) do
+  defp merge_definitions(definitions, %{definitions: existing} = swagger_map) do
     %{swagger_map | definitions: Map.merge(existing, definitions)}
   end
 end

@@ -109,13 +109,26 @@ defmodule ValidatorTest do
              Validator.validate("/post/pets", %{"id" => 1, "pet" => %{"name" => "pet_name"}})
 
     assert :ok =
-      Validator.validate("/post/pets", %{"id" => 1, "pet" => %{"name" => "pet_name", "tag" => "pet_tag", "nickname" => nil}})
+             Validator.validate("/post/pets", %{
+               "id" => 1,
+               "pet" => %{"name" => "pet_name", "tag" => "pet_tag", "nickname" => nil}
+             })
 
     assert :ok =
-      Validator.validate("/post/pets", %{"id" => 1, "pet" => %{"name" => "pet_name", "tag" => "pet_tag", "full_name" => nil}})
+             Validator.validate("/post/pets", %{
+               "id" => 1,
+               "pet" => %{"name" => "pet_name", "tag" => "pet_tag", "full_name" => nil}
+             })
 
     assert :ok =
-      Validator.validate("/post/pets", %{"id" => 1, "pet" => %{"name" => "pet_name", "tag" => "pet_tag", "full_name" => %{"first_name" => "Boaty", "last_name" => "McBoatface"}}})
+             Validator.validate("/post/pets", %{
+               "id" => 1,
+               "pet" => %{
+                 "name" => "pet_name",
+                 "tag" => "pet_tag",
+                 "full_name" => %{"first_name" => "Boaty", "last_name" => "McBoatface"}
+               }
+             })
 
     assert :ok =
              Validator.validate("/post/pets", %{

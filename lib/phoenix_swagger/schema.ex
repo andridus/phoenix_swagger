@@ -33,6 +33,7 @@ defmodule PhoenixSwagger.Schema do
     :minProperties,
     :required,
     :type,
+    :schema,
     :items,
     :allOf,
     :properties,
@@ -263,14 +264,12 @@ defmodule PhoenixSwagger.Schema do
   end
 
   defp get_dash_name({:-, _line, [first, second]}),
-       do: get_dash_name(first) <> "-" <> get_dash_name(second)
+    do: get_dash_name(first) <> "-" <> get_dash_name(second)
 
   defp get_dash_name({atom_name, _, _}), do: to_string(atom_name)
 
   defp get_args({:-, _line, [_first, second]}), do: get_args(second)
   defp get_args({_, _line, args}), do: args
-
-
 
   @doc """
   Sets the format of a Schema with `type: :string`.
@@ -803,4 +802,10 @@ defmodule PhoenixSwagger.Schema do
   def nullable(model = %Schema{}, value) when value in [true, false, nil] do
     %{model | "x-nullable": value}
   end
+
+  @behaviour Access
+  defdelegate get(v, key, default), to: Map
+  defdelegate fetch(v, key), to: Map
+  defdelegate get_and_update(v, key, func), to: Map
+  defdelegate pop(v, key), to: Map
 end

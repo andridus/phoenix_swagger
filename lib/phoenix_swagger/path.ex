@@ -66,7 +66,18 @@ defmodule PhoenixSwagger.Path do
 
     See http://swagger.io/specification/#responseObject
     """
-    defstruct description: "", schema: nil, headers: nil, examples: nil
+    defstruct description: "", schema: nil, headers: nil, examples: nil, content: nil
+  end
+
+  defmodule MediaTypeObject do
+    @moduledoc """
+    A swagger MediaTypeObject definition.
+
+    The response status (200, 404, etc.) is the key in the containing map.
+
+    See http://swagger.io/specification/#MediaTypeObject
+    """
+    defstruct schema: nil, example: nil, examples: nil, encoding: nil
   end
 
   defmodule OperationObject do
@@ -311,7 +322,9 @@ defmodule PhoenixSwagger.Path do
 
   def response(path = %PathObject{}, status, description, schema = %{}, opts) do
     opts = expand_response_example(path, opts)
-    resp = struct(ResponseObject, [description: description, schema: schema] ++ opts)
+    resp = response_media_type(path, description, schema, opts)
+    # operation = path.operation |> Map.delete(:produces)
+    # path = %{path | operation: operation}
     put_in(path.operation.responses[status |> to_string], resp)
   end
 
@@ -323,6 +336,27 @@ defmodule PhoenixSwagger.Path do
   end
 
   def expand_response_example(%PathObject{}, opts), do: opts
+
+  def response_media_type(
+        %PathObject{operation: %{produces: produces}},
+        description,
+        schema,
+        opts
+      ) do
+    content =
+      Enum.reduce((produces || []), %{}, fn p, m ->
+        PhoenixSwagger.Value.insert(
+          m,
+          p,
+          struct(MediaTypeObject, [schema: PhoenixSwagger.Value.get(schema, "properties.data")] ++ opts)
+        )
+      end)
+
+    struct(ResponseObject, description: description, content: content)
+  end
+
+  def response_media_type(%PathObject{}, description, schema, opts),
+    do: struct(ResponseObject, [description: description, schema: schema] ++ opts)
 
   @doc """
   Converts the `%PathObject{}` struct into the nested JSON form expected by swagger.

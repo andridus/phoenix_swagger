@@ -153,7 +153,7 @@ defmodule PhoenixSwagger do
   end
 
   @doc """
-  Swagger operations (aka "paths") are defined inside a `swagger_path` block.
+  PhoenixSwagger operations (aka "paths") are defined inside a `swagger_path` block.
 
   Within the do-end block, the DSL provided by the `PhoenixSwagger.Path` module can be used.
   The DSL is any chain of functions with first argument being a `PhoenixSwagger.Path.PathObject` struct.
@@ -161,10 +161,10 @@ defmodule PhoenixSwagger do
   The verb and path can be set explicitly using the `get`, `put`, `post`, `patch`, `delete` functions, or
   inferred from the phoenix router automatically.
 
-  Swagger `tags` will default to match the module name with trailing `Controller` removed.
+  PhoenixSwagger `tags` will default to match the module name with trailing `Controller` removed.
   Eg operations defined in module MyApp.UserController will have `tags: ["User"]`.
 
-  Swagger `operationId` will default to the fully qualified action function name.
+  PhoenixSwagger `operationId` will default to the fully qualified action function name.
   Eg `index` action in `MyApp.UserController` will have `operationId: "MyApp.UserController.index"`.
 
   ## Example
@@ -249,7 +249,7 @@ defmodule PhoenixSwagger do
   Use JSON library from phoenix configuration
   """
   def json_library do
-    Application.get_env(:phoenix_swagger, :json_library, Poison)
+    Application.get_env(:softaliza_store, :swagger_json_library, Poison)
   end
 
   @doc false

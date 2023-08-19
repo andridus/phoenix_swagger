@@ -2,11 +2,11 @@
     "swagger": "2.0",
     "info": {
         "version": "1.0.0",
-        "title": "Swagger Petstore (Simple)",
+        "title": "PhoenixSwagger Petstore (Simple)",
         "description": "A sample API that uses a petstore as an example to demonstrate features in the swagger-2.0 specification",
         "termsOfService": "http://helloreverb.com/terms/",
         "contact": {
-            "name": "Swagger API team",
+            "name": "PhoenixSwagger API team",
             "email": "foo@example.com",
             "url": "http://swagger.io"
         },

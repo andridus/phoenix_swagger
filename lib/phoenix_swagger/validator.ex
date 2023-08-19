@@ -166,7 +166,8 @@ defmodule PhoenixSwagger.Validator do
               properties
             )
 
-          schema_object = schema_object
+          schema_object =
+            schema_object
             |> Map.update("definitions", %{}, &swagger_nullable_to_json_schema/1)
 
           resolved_schema = ExJsonSchema.Schema.resolve(schema_object)
@@ -178,7 +179,7 @@ defmodule PhoenixSwagger.Validator do
     |> List.flatten()
   end
 
-  # Swagger 2.0 and JSON-Schema differ in the treatment of nulls.
+  # PhoenixSwagger 2.0 and JSON-Schema differ in the treatment of nulls.
   # When the "x-nullable" vendor extension is present in the swagger,
   # convert the type to an array including "null"
   defp swagger_nullable_to_json_schema(schema = %{"type" => type, "x-nullable" => true})
@@ -189,7 +190,8 @@ defmodule PhoenixSwagger.Validator do
 
   defp swagger_nullable_to_json_schema(schema = %{"$ref" => ref, "x-nullable" => true})
        when is_binary(ref) do
-    schema = schema
+    schema =
+      schema
       |> Map.drop(["$ref", "x-nullable"])
       |> Map.put("oneOf", [%{"type" => "null"}, %{"$ref" => ref}])
 

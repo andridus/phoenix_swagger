@@ -1,6 +1,6 @@
 defmodule PhoenixSwagger.Plug.SwaggerUI do
   @moduledoc """
-  Swagger UI in a plug.
+  PhoenixSwagger UI in a plug.
 
   ## Examples
 
@@ -22,7 +22,7 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
   alias Plug.Conn
 
   # Serve static assets before routing
-  plug(Plug.Static, at: "/", from: :phoenix_swagger)
+  plug(Plug.Static, at: "/", from: :softaliza_store, gzip: false, only: ~w(swagger))
 
   plug(:match)
   plug(:dispatch)
@@ -33,11 +33,11 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
   <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Swagger UI</title>
+    <title>PhoenixSwagger UI</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Source+Code+Pro:300,600|Titillium+Web:400,600,700" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
-    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
+    <link rel="stylesheet" type="text/css" href="/swagger/swagger-ui.css" >
+    <link rel="icon" type="image/png" href="/swagger/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/swagger/favicon-16x16.png" sizes="16x16" />
     <style>
       html
       {
@@ -97,8 +97,8 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
 
   <div id="swagger-ui"></div>
 
-  <script src="./swagger-ui-bundle.js"> </script>
-  <script src="./swagger-ui-standalone-preset.js"> </script>
+  <script src="/swagger/swagger-ui-bundle.js"> </script>
+  <script src="/swagger/swagger-ui-standalone-preset.js"> </script>
   <script>
   window.onload = function() {
 
@@ -129,6 +129,7 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
         SwaggerUIBundle.presets.apis,
         SwaggerUIStandalonePreset
       ],
+      defaultModelsExpandDepth: -1,
       plugins: [
         SwaggerUIBundle.plugins.DownloadUrl
       ],
@@ -198,7 +199,7 @@ defmodule PhoenixSwagger.Plug.SwaggerUI do
    - `otp_app` (required) The name of the app has is hosting the swagger file
    - `swagger_file` (required) The name of the file, eg "swagger.json"
    - `config_object` (optional) These values are injected into the config object passed to SwaggerUI.
-   - `config_url` (optional) Populates the `configUrl` Swagger UI parameter. A URL to fetch an external configuration document from.
+   - `config_url` (optional) Populates the `configUrl` PhoenixSwagger UI parameter. A URL to fetch an external configuration document from.
 
   """
   def init(opts) do

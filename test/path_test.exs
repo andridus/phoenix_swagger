@@ -216,7 +216,7 @@ defmodule PhoenixSwagger.PathTest do
                      "type" => "string"
                    }
                  ],
-                 "request_body" => %{
+                 "requestBody" => %{
                    "content" => %{
                    "application/json" => %{
                      "description" => "OK",

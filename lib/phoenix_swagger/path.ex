@@ -225,8 +225,8 @@ defmodule PhoenixSwagger.Path do
       type: type
     }}])
     path =
-    if is_nil(path.operation.requestBody[:content][:"application/json"][:schema]) do
-      put_in(path.operation.requestBody, %{content: %{:"application/json" => %{schema: %{}}}})
+    if is_nil(path.operation.requestBody[:content]["application/json"][:schema]) do
+      put_in(path.operation.requestBody, %{content: %{"application/json" => %{schema: %{}}}})
     else
       path
     end

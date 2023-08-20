@@ -201,7 +201,7 @@ defmodule PhoenixSwagger.Path do
       end
 
   """
-  defmacro requestBody(path, block) do
+  defmacro request_body(path, block) do
     exprs =
       case block do
         [do: {:__block__, _, exprs}] -> exprs

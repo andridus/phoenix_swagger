@@ -40,6 +40,7 @@ defmodule PhoenixSwagger.PathTest do
     request_body do
       user(Schema.ref(:User), "user attributes")
       team(:string, "Users team ID")
+      num(:integer, "Users team ID", example: 10000)
     end
     parameters do
       user(:body, Schema.ref(:User), "user attributes")

@@ -222,8 +222,10 @@ defmodule PhoenixSwagger.Path do
   def parameter_body(path = %PathObject{}, name, type, description, opts \\ []) do
     param = Map.new([{name, %{
       description: description,
-      type: type
+      type: type,
+      example: opts[:example]
     }}])
+    opts = Keyword.drop(opts, [:example])
     path =
     if is_nil(path.operation.requestBody[:content]["application/json"][:schema]) do
       put_in(path.operation.requestBody, %{content: %{"application/json" => %{schema: %{}}}})

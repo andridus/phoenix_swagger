@@ -37,6 +37,10 @@ defmodule PhoenixSwagger.PathTest do
     consumes("application/json")
     produces("application/json")
 
+    request_body do
+      user(Schema.ref(:User), "user attributes")
+      team(:string, "Users team ID")
+    end
     parameters do
       user(:body, Schema.ref(:User), "user attributes")
       team(:path, :string, "Users team ID")
@@ -212,6 +216,53 @@ defmodule PhoenixSwagger.PathTest do
                      "type" => "string"
                    }
                  ],
+                 "request_body" => %{
+                   "content" => %{
+                   "application/json" => %{
+                     "description" => "OK",
+                     "schema" => %{
+                       "type" => "object",
+                       "title" => "User",
+                       "description" => "A user of the application",
+                       "properties" => %{
+                         "address" => %{
+                           "description" => "Home adress",
+                           "type" => "string"
+                         },
+                         "id" => %{
+                           "description" => "Unique identifier",
+                           "type" => "string"
+                         },
+                         "name" => %{
+                           "description" => "Users name",
+                           "type" => "string"
+                         },
+                         "preferences" => %{
+                           "properties" => %{
+                             "send_special_offers" => %{
+                               "default" => true,
+                               "description" => "special offers list subscription",
+                               "type" => "boolean"
+                             },
+                             "subscribe_to_mailing_list" => %{
+                               "default" => true,
+                               "description" => "mailing list subscription",
+                               "type" => "boolean"
+                             },
+                             "phone_number" => %{
+                               "description" => "specified phone",
+                               "type" => "string",
+                               "x-nullable" => true
+                             }
+                           },
+                           "type" => "object"
+                         }
+                       },
+                       "required" => ["id", "name"]
+                     }
+                   }
+                   }
+                 },
                  "produces" => ["application/json"],
                  "responses" => %{
                    "200" => %{

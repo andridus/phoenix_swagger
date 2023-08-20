@@ -95,6 +95,7 @@ defmodule PhoenixSwagger.Path do
       consumes: nil,
       produces: nil,
       parameters: [],
+      request_body: %{},
       responses: %{},
       deprecated: nil,
       security: nil
@@ -182,6 +183,57 @@ defmodule PhoenixSwagger.Path do
   """
   def security(path = %PathObject{}, security) do
     put_in(path.operation.security, security)
+  end
+
+  @doc """
+  Defines a request body for an operation with a custom DSL syntax.
+
+  ## Examples
+
+      swagger_path :create do
+        post "/api/v1/{team}/users"
+        summary "Create a new user"
+        request_body do
+          user Schema.ref(:User), "user attributes"
+          team :string, "Users team ID"
+        end
+        response 200, "OK", :User
+      end
+
+  """
+  defmacro request_body(path, block) do
+    exprs =
+      case block do
+        [do: {:__block__, _, exprs}] -> exprs
+        [do: expr] -> [expr]
+      end
+    exprs
+    |> Enum.map(fn {name, line, args} -> {:parameter_body, line, [name | args]} end)
+    |> Enum.reduce(path, fn expr, acc ->
+      quote do
+        unquote(acc) |> unquote(expr)
+      end
+    end)
+  end
+
+  @doc """
+  Adds a request_body to the operation of a swagger `%PathObject{}`.
+  """
+  def parameter_body(path = %PathObject{}, name, type, description, opts \\ []) do
+    param = Map.new([{name, %{
+      description: description,
+      type: type
+    }}])
+    path =
+    if is_nil(path.operation.request_body[:content][:"application/json"][:schema]) do
+      put_in(path.operation.request_body, %{content: %{:"application/json" => %{schema: %{}}}})
+    else
+      path
+    end
+    param = Map.merge(param, opts |> Enum.into(%{}, &translate_parameter_opt/1)) |> IO.inspect()
+    params = Map.get(path.operation.request_body.content, "application/json", %{}) |> Map.get(:schema, %{}) |> Map.get(:properties, %{})
+    content = %{content: %{"application/json" => %{schema: %{properties: Map.merge(params,param)}}}}
+    put_in(path.operation.request_body, content)
   end
 
   @doc """
@@ -344,11 +396,14 @@ defmodule PhoenixSwagger.Path do
         opts
       ) do
     content =
-      Enum.reduce((produces || []), %{}, fn p, m ->
+      Enum.reduce(produces || [], %{}, fn p, m ->
         PhoenixSwagger.Value.insert(
           m,
           p,
-          struct(MediaTypeObject, [schema: PhoenixSwagger.Value.get(schema, "properties.data")] ++ opts)
+          struct(
+            MediaTypeObject,
+            [schema: PhoenixSwagger.Value.get(schema, "properties.data")] ++ opts
+          )
         )
       end)
 

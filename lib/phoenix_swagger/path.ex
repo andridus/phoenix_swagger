@@ -95,7 +95,7 @@ defmodule PhoenixSwagger.Path do
       consumes: nil,
       produces: nil,
       parameters: [],
-      request_body: %{},
+      requestBody: %{},
       responses: %{},
       deprecated: nil,
       security: nil
@@ -193,7 +193,7 @@ defmodule PhoenixSwagger.Path do
       swagger_path :create do
         post "/api/v1/{team}/users"
         summary "Create a new user"
-        request_body do
+        requestBody do
           user Schema.ref(:User), "user attributes"
           team :string, "Users team ID"
         end
@@ -201,7 +201,7 @@ defmodule PhoenixSwagger.Path do
       end
 
   """
-  defmacro request_body(path, block) do
+  defmacro requestBody(path, block) do
     exprs =
       case block do
         [do: {:__block__, _, exprs}] -> exprs
@@ -217,7 +217,7 @@ defmodule PhoenixSwagger.Path do
   end
 
   @doc """
-  Adds a request_body to the operation of a swagger `%PathObject{}`.
+  Adds a requestBody to the operation of a swagger `%PathObject{}`.
   """
   def parameter_body(path = %PathObject{}, name, type, description, opts \\ []) do
     param = Map.new([{name, %{
@@ -225,15 +225,15 @@ defmodule PhoenixSwagger.Path do
       type: type
     }}])
     path =
-    if is_nil(path.operation.request_body[:content][:"application/json"][:schema]) do
-      put_in(path.operation.request_body, %{content: %{:"application/json" => %{schema: %{}}}})
+    if is_nil(path.operation.requestBody[:content][:"application/json"][:schema]) do
+      put_in(path.operation.requestBody, %{content: %{:"application/json" => %{schema: %{}}}})
     else
       path
     end
-    param = Map.merge(param, opts |> Enum.into(%{}, &translate_parameter_opt/1)) |> IO.inspect()
-    params = Map.get(path.operation.request_body.content, "application/json", %{}) |> Map.get(:schema, %{}) |> Map.get(:properties, %{})
+    param = Map.merge(param, opts |> Enum.into(%{}, &translate_parameter_opt/1))
+    params = Map.get(path.operation.requestBody.content, "application/json", %{}) |> Map.get(:schema, %{}) |> Map.get(:properties, %{})
     content = %{content: %{"application/json" => %{schema: %{properties: Map.merge(params,param)}}}}
-    put_in(path.operation.request_body, content)
+    put_in(path.operation.requestBody, content)
   end
 
   @doc """
